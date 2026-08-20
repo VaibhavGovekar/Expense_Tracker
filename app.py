@@ -78,6 +78,21 @@ def load_data():
         df["month"] = df["date"].dt.strftime("%Y-%m")
     return df, budgets_df
 
+def clear_all_transactions():
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM transactions")
+        cursor.execute(
+            "DELETE FROM sqlite_sequence WHERE name='transactions'"
+        )  # Resets ID counter to 1
+        conn.commit()
+
+
+def clear_all_budgets():
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM budgets")
+        conn.commit()
 
 # --- SIDEBAR: DATA ENTRY ---
 st.sidebar.header("➕ Add Transaction")
@@ -124,6 +139,22 @@ if st.sidebar.button("Save Budget"):
     set_budget(current_month_str, budget_input)
     st.sidebar.success("Budget updated!")
     st.rerun()
+
+# --- SIDEBAR: DANGER ZONE (RESET DATA) ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("⚠️ Manage Data")
+
+with st.sidebar.expander("Reset Options"):
+    if st.button("🗑️ Clear All Transactions", type="secondary"):
+        clear_all_transactions()
+        st.sidebar.warning("All transactions deleted!")
+        st.rerun()
+
+    if st.button("🗑️ Reset Everything (Full Reset)", type="primary"):
+        clear_all_transactions()
+        clear_all_budgets()
+        st.sidebar.error("All data and budgets have been wiped!")
+        st.rerun()
 
 # --- MAIN DASHBOARD ---
 st.title("💰 Personal Expense Tracker")
